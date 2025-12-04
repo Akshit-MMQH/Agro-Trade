@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/crops",
+      "destination": "/api/crops"
+    },
+    {
+      "source": "/api/crops/:action",
+      "destination": "/api/crops"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
