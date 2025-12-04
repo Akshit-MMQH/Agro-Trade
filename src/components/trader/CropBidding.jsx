@@ -67,18 +67,35 @@ const CropBidding = () => {
     setShowPaymentPopup(true);
   };
 
+  const savePayment = async (cropId, paymentId) => {
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/crops/payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cropId, traderId: user.id, paymentId })
+      });
+      const result = await response.json();
+      console.log('Payment saved:', result);
+      await fetchCrops();
+    } catch (err) {
+      console.error('Failed to save payment:', err);
+    }
+  };
+
   const handlePaymentOption = (option) => {
     const totalAmount = selectedCrop.currentPrice * selectedCrop.quantity;
     
     if (option === 'RazorPay') {
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: totalAmount * 100, // Amount in paise
+        amount: totalAmount * 100,
         currency: 'INR',
         name: 'AgroTrade',
         description: `Payment for ${selectedCrop.cropName} - ${selectedCrop.quantity} kg`,
-        handler: function (response) {
+        handler: async function (response) {
           alert(`Payment successful! Payment ID: ${response.razorpay_payment_id}`);
+          await savePayment(selectedCrop.id, response.razorpay_payment_id);
           setShowPaymentPopup(false);
           setSelectedCrop(null);
         },
@@ -168,12 +185,23 @@ const CropBidding = () => {
                 ) : (
                   <div className="space-y-2">
                     {crop.highestBidder && crop.highestBidder.traderId === JSON.parse(localStorage.getItem('user') || '{}').id ? (
-                      <button
-                        className="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-600"
-                        onClick={() => handlePayClick(crop)}
-                      >
-                        Pay ₹{crop.currentPrice * crop.quantity}
-                      </button>
+                      crop.payment ? (
+                        <div className="flex gap-2">
+                          <button className="flex-1 bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-600">
+                            Confirm Delivery
+                          </button>
+                          <button className="flex-1 bg-red-500 text-white font-semibold py-2 rounded-md hover:bg-red-600">
+                            Help
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          className="w-full bg-green-500 text-white font-semibold py-2 rounded-md hover:bg-green-600"
+                          onClick={() => handlePayClick(crop)}
+                        >
+                          Pay ₹{crop.currentPrice * crop.quantity}
+                        </button>
+                      )
                     ) : (
                       <div className="w-full bg-gray-400 text-gray-700 font-semibold py-2 rounded-md text-center">
                         {crop.highestBidder ? `Won by ${crop.highestBidder.traderName}` : 'No Bids'}

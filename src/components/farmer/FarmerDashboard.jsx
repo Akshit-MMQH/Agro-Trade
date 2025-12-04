@@ -185,13 +185,22 @@ const FarmerDashboard = () => {
                           <div className="text-sm font-medium text-blue-800">{t('auctionWinner')}</div>
                           <div className="text-sm text-blue-600">{crop.highestBidder.traderName}</div>
                           <div className="text-sm text-blue-600">{t('total')}: ₹{crop.currentPrice * crop.quantity}</div>
-                          <div className="text-xs text-blue-500 mt-1">{t('status')}: {t('pendingDelivery')}</div>
+                          <div className="text-xs text-blue-500 mt-1">{t('status')}: {crop.payment ? 'Payment Completed' : t('pendingDelivery')}</div>
                         </div>
                       ) : crop.status === 'closed' ? (
                         <div className="bg-gray-50 p-3 rounded mb-3">
                           <div className="text-sm text-gray-600">{t('noBids')}</div>
                         </div>
                       ) : null}
+                      
+                      {crop.status === 'closed' && crop.payment && (
+                        <button
+                          onClick={() => alert('Packers/Movers service will be available soon!')}
+                          className="w-full bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 font-medium"
+                        >
+                          Order Packers/Movers
+                        </button>
+                      )}
                       
                       {crop.status === 'active' && (
                         <button

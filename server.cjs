@@ -140,4 +140,46 @@ app.post('/api/crops/end', (req, res) => {
   }
 });
 
+app.post('/api/crops/payment', (req, res) => {
+  try {
+    const { cropId, traderId, paymentId } = req.body;
+    
+    if (!cropId || !traderId || !paymentId) {
+      return res.status(400).json({ success: false, message: 'Missing required fields' });
+    }
+
+    if (!fs.existsSync(CROPS_FILE)) {
+      return res.status(404).json({ success: false, message: 'No crops found' });
+    }
+    
+    let crops = JSON.parse(fs.readFileSync(CROPS_FILE, 'utf8'));
+    const cropIndex = crops.findIndex(c => c.id === cropId);
+    
+    if (cropIndex === -1) {
+      return res.status(404).json({ success: false, message: 'Crop not found' });
+    }
+    
+    crops[cropIndex].payment = {
+      traderId,
+      paymentId,
+      timestamp: new Date().toISOString(),
+      status: 'completed'
+    };
+    
+    fs.writeFileSync(CROPS_FILE, JSON.stringify(crops, null, 2));
+    
+    res.json({ success: true, message: 'Payment recorded successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+const PORT = process.env.PORT || 3001;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}
+
 module.exports = app;
